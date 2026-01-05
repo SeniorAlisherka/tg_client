@@ -4,7 +4,7 @@ import sys
 from ctypes import CDLL, CFUNCTYPE, c_char_p, c_double, c_int
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
-from main_logic.utils import handlers
+from main_logic.utils import event_handlers, menu_handlers
 import threading
 
 load_dotenv()
@@ -19,13 +19,12 @@ class TelegramClient:
         self._setup_functions()
         self._setup_logging()
         self.client_id = self._td_create_client_id()
+        self.auth_done = threading.Event()
         self.authorized = threading.Event()
-        self.got_response = threading.Event()
         self.closed = threading.Event()
-        # menu logic
-        self.menu = "_menu_main"
-        self.channels = []
-        self.pending_channels = 0
+        self.menu = "menu_main"
+        self.menu_event = threading.Event()
+        self.state = {}  # shared menu/event state
 
     def _load_library(self) -> None:
         base = os.path.dirname(__file__)
@@ -68,10 +67,10 @@ class TelegramClient:
         @self.log_message_callback_type
         def on_log_message_callback(verbosity_level, message) -> None:
             if verbosity_level == 0:  # handle only fatal errors
-                sys.exit(f"TDLib fatal error: {message.decode('utf-8')}")
-                print(f"TDLib fatal error: {message.decode('utf-8')}")
+                sys.exit(f"\nTDLib fatal error: {message.decode('utf-8')}")
+                print(f"\nTDLib fatal error: {message.decode('utf-8')}")
             elif verbosity_level == 1:
-                print(f"TDLib error: {message.decode('utf-8')}")
+                print(f"\nTDLib error: {message.decode('utf-8')}")
 
         self._on_log_message_callback = on_log_message_callback
 
@@ -124,10 +123,16 @@ class TelegramClient:
         try:
             td_thread = threading.Thread(target=self._tdlib_loop, daemon=True)
             td_thread.start()
-            self.authorized.wait()
-            menu_thread = threading.Thread(target=self._menu_loop, daemon=True)
-            menu_thread.start()
+
+            # Wait until auth finishes (success OR failure)
+            self.auth_done.wait()
+
+            if self.authorized.is_set():
+                menu_thread = threading.Thread(target=self._menu_loop, daemon=True)
+                menu_thread.start()
+
             self.closed.wait()
+
         except KeyboardInterrupt:
             print("\n🛑 Ctrl+C received, shutting down...")
             self.send({"@type": "close"})
@@ -138,69 +143,27 @@ class TelegramClient:
         while True:
             event = self.receive(timeout=1.0)
             if event:
-                self.handle(event)
+                self._handle_event(event)
 
-    def handle(self, event):
+    def _handle_event(self, event):
         name = event["@type"]
-        handler = getattr(handlers, f"on_{name}", None)
+        event_handler = getattr(event_handlers, f"on_{name}", None)
 
-        if handler:
-            handler(self, event)
+        if event_handler:
+            event_handler(self, event)
         else:
             # print(f"Unhandled event: {name}")
             pass
 
     def _menu_loop(self) -> None:
         while True:
-            try:
-                handler = getattr(self, self.menu)
-            except AttributeError:
-                print("Unhandled menu:", self.menu)
+            menu_handler = getattr(menu_handlers, f"on_{self.menu}", None)
+
+            if menu_handler:
+                self.menu_event.clear()
+                menu_handler(self)
+                self.menu_event.wait()
+            else:
+                print("\nUnhandled menu:", self.menu)
                 self.send({"@type": "close"})
                 break
-            handler()
-
-    def _menu_main(self):
-        print("\nMain menu:")
-        print("1) Who am I?")
-        print("2) Channels")
-        print("q) Quit")
-
-        choice = input("> ").strip().lower()
-
-        if choice == "1":
-            self._menu_main_1()
-
-        elif choice == "2":
-            self._menu_main_2()
-
-        elif choice == "q":
-            self._menu_main_q()
-
-    def _menu_main_1(self):
-        self.got_response.clear()
-        self.send({"@type": "getMe", "@extra": "_menu_main"})
-        self.got_response.wait()
-
-    def _menu_main_2(self):
-        self.got_response.clear()
-        self.send({"@type": "getChats", "limit": 100000, "@extra": "_menu_main_2"})
-        self.got_response.wait()
-        self.menu = "_menu_channels"
-
-    def _menu_main_q(self):
-        self.send({"@type": "close"})
-
-    def _menu_channels(self):
-        print("\nChannels:")
-        for i, ch in enumerate(self.channels, 1):
-            print(f"{i}) {ch['title']}")
-        print("b) Back")
-
-        choice = input("> ").strip().lower()
-
-        if choice == "b":
-            self._menu_channels_b()
-
-    def _menu_channels_b(self):
-        self.menu = "_menu_main"
