@@ -118,8 +118,8 @@ def on_user_menu_main_1(client, event):
 
 
 def on_error(client, event):
-    code = event.get("code")
-    message = event.get("message")
+    code = event["code"]
+    message = event["message"]
 
     # Try code-based handler first
     error_handler = getattr(_THIS_MODULE, f"on_error_{code}", None)
@@ -141,7 +141,7 @@ def on_error_PASSWORD_HASH_INVALID(client, event):
 
 
 def on_error_429(client, event):
-    message = event.get("message", "")
+    message = event["message"]
     print(f"\n⏳{message} seconds")
 
     client.auth_done.set()  # unblock run()
@@ -189,9 +189,9 @@ def on_chat(client, event):
 
 
 def on_chat_menu_main_2(client, event):
-    chat_type = event.get("type", {})
+    chat_type = event["type"]
 
-    if chat_type.get("@type") == "chatTypeSupergroup" and chat_type.get("is_channel"):
+    if chat_type["@type"] == "chatTypeSupergroup" and chat_type["is_channel"]:
         client.state["channels"].append(event)
 
     client.state["pending"] -= 1
@@ -199,3 +199,79 @@ def on_chat_menu_main_2(client, event):
     if client.state["pending"] == 0:
         client.menu = "menu_channels"
         client.menu_event.set()
+
+
+def on_supergroup(client, event):
+    if not extra_dispatcher("on_supergroup", client, event):
+        pass
+
+
+def on_supergroup_menu_channel_1(client, event):
+    member_count = event["member_count"]
+    print(f"\nMembers: {member_count}")
+    client.menu_event.set()
+
+
+def on_supergroupFullInfo(client, event):
+    if not extra_dispatcher("on_supergroupFullInfo", client, event):
+        pass
+
+
+def on_supergroupFullInfo_menu_channel_3(client, event):
+    if not event["can_get_members"]:
+        print("\nYou don't have rights to get members.")
+        client.menu_event.set()
+        return
+
+    state = client.state["member_search"]
+
+    _send_next_member_search(client, state)
+
+
+def _send_next_member_search(client, state):
+    if state["index"] == len(state["names"]):
+        missing = state["missing"]
+        if not missing:
+            print("\nNo missing members.")
+        else:
+            print("\nMissing members:")
+            for name in missing:
+                print(name)
+            print(f"\nTotal missing: {len(missing)}")
+
+        client.menu_event.set()
+        return
+
+    name = state["names"][state["index"]]
+    client.send(
+        {
+            "@type": "getSupergroupMembers",
+            "supergroup_id": state["supergroup_id"],
+            "filter": {
+                "@type": "supergroupMembersFilterContacts",
+                "query": name,
+            },
+            "offset": 0,
+            "limit": 1,
+            "@extra": "menu_channel_3",
+        }
+    )
+
+
+def on_chatMembers(client, event):
+    if not extra_dispatcher("on_chatMembers", client, event):
+        pass
+
+
+def on_chatMembers_menu_channel_3(client, event):
+    state = client.state.get("member_search")
+
+    members = event["members"]
+    member = members[0] if members else None
+
+    if not member:
+        state["missing"].append(state["names"][state["index"]])
+
+    state["index"] += 1
+    print(f"\nChecked {state['index']} of {len(state['names'])}...")
+    _send_next_member_search(client, state)

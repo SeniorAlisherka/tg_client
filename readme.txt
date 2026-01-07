@@ -24,7 +24,8 @@ ls -l td/tdlib
 
 Как добавлять менюшки и event handlers: 
 Менюшки называешь menu_{name}, функция самой менюшки - on_menu_{name}.
-Функция каждого выбора - on_menu_{name}_{choice}
+Функция каждого выбора - on_menu_{name}_{choice},
+Если там выбор каналов например - on_menu_{name}_index называешь
 Новый event handler ты называешь по @type прилетающему, т.е. on_{type}.
 Функцию для определенного extra надо назвать on_{type}_{extra}.
 Для определенных функций типа on_error, on_updateAuthorizationState, где 
@@ -45,3 +46,7 @@ updateAuthorizationState wait for pswd и снова залочить)
 выводить инпут в другой тред тоже тупо потому что ты нарушаешь правило,
 update - handler - update - handler - update ...
 Поэтому только так
+
+при сборке: 
+1) чекнуть работу logs (db)
+2) в .env есть полный путь
