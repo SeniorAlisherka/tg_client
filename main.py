@@ -1,4 +1,4 @@
-from main_logic.tg_client import TelegramClient
+from src.datatypes.tg_client import TelegramClient
 
 
 def main():

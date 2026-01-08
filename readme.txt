@@ -22,19 +22,15 @@ ls -l td/tdlib
 2) полученные 2 файла (1 основной другой alias) я засунул в main_logic
 3) написал свой tg_client.py
 
-Как добавлять менюшки и event handlers: 
-Менюшки называешь menu_{name}, функция самой менюшки - on_menu_{name}.
-Функция каждого выбора - on_menu_{name}_{choice},
-Если там выбор каналов например - on_menu_{name}_index называешь
-Новый event handler ты называешь по @type прилетающему, т.е. on_{type}.
-Функцию для определенного extra надо назвать on_{type}_{extra}.
-Для определенных функций типа on_error, on_updateAuthorizationState, где 
-нужно для каждого message или state нужна отдельная функция 
-создаешь свой dispatcher внутри функции,
-у меня для обеих этих функций диспатчер ищет 
-on_error_{code}, если не нашел то on_error_{message},
-on_state_{state} функции соответственно,
-советую так и продолжать
+Как добавлять любые классы: 
+менюшки называешь типа menu_main
+для каждой менюшки создаешь типа buttons_factory_main
+кнопки называешь типа button_main_1
+действие кнопки называешь типа action_main_1
+event_handlers называешь типа event_handler_updateAuthorizationState
+extra_handlers называешь типа extra_handler_button_main_1
+helper называешь типа helper_{whatitdoes} типа helper_auth_wait_params
+
 
 баги нерешаемые
 1) пока вводишь пароль если нажимаешь ctrl c, то close отправляется, 

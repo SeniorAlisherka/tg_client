@@ -1,35 +1,36 @@
 import json
 import os
 import sys
+import threading
 from ctypes import CDLL, CFUNCTYPE, c_char_p, c_double, c_int
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
-from main_logic.utils import event_handlers, menu_handlers
-import threading
-
-load_dotenv()
+from src.static_instances import event_handlers
+import src.static_instances.menus as menus
 
 
 class TelegramClient:
-
     def __init__(self) -> None:
+        load_dotenv()
         self.api_id = int(os.getenv("TG_API_ID"))
-        self.api_hash = str(os.getenv("TG_API_HASH"))
+        self.api_hash = os.getenv("TG_API_HASH")
+
         self._load_library()
         self._setup_functions()
         self._setup_logging()
+
         self.client_id = self._td_create_client_id()
+
         self.auth_done = threading.Event()
         self.authorized = threading.Event()
         self.closed = threading.Event()
-        self.menu = "menu_main"
+        self.current_menu = menus.menu_main
         self.menu_event = threading.Event()
-        self.state = {}  # shared menu/event state
+        self.state = {}
 
     def _load_library(self) -> None:
-        base = os.path.dirname(__file__)
-        tdjson_path = os.path.join(base, "libtdjson.dylib")
-        self.tdjson = CDLL(tdjson_path)
+        lib_path = os.getenv("TDLIB_PATH")
+        self.tdjson = CDLL(lib_path)
 
     def _setup_functions(self) -> None:
         self._td_create_client_id = self.tdjson.td_create_client_id
@@ -63,6 +64,9 @@ class TelegramClient:
         Args:
             verbosity_level: 0-fatal, 1-errors, 2-warnings, 3+-debug
         """
+        dev_mode = eval(os.getenv("DEV_MODE"))
+        if not dev_mode:
+            verbosity_level = 0  # in production
 
         @self.log_message_callback_type
         def on_log_message_callback(verbosity_level, message) -> None:
@@ -75,8 +79,8 @@ class TelegramClient:
         self._on_log_message_callback = on_log_message_callback
 
         self._td_set_log_message_callback(
-            2, on_log_message_callback
-        )  # send logs with verbosity <= 2 (fatal, errors, warnings) to callback
+            3, on_log_message_callback
+        )  # send logs with verbosity <= 3 (fatal, errors, warnings, debug) to callback
         self.execute(
             {"@type": "setLogVerbosityLevel", "new_verbosity_level": verbosity_level}
         )  # generate logs with verbosity <= 1 (fatal and errors only)
@@ -103,6 +107,7 @@ class TelegramClient:
             query: The request to send
         """
         query_json = json.dumps(query).encode("utf-8")
+        # print("\nSending:", query)
         self._td_send(self.client_id, query_json)
 
     def receive(self, timeout: float = 1.0) -> Optional[Dict[str, Any]]:
@@ -116,6 +121,7 @@ class TelegramClient:
         """
         result = self._td_receive(timeout)
         if result:
+            # print("\nReceived:", result.decode("utf-8"))
             return json.loads(result.decode("utf-8"))
         return None
 
@@ -139,31 +145,39 @@ class TelegramClient:
             self.closed.wait()
 
     def _tdlib_loop(self) -> None:
+        handled_events = {
+            "updateAuthorizationState": event_handlers.event_handler_updateAuthorizationState,
+            "error": event_handlers.event_handler_error,
+            "user": event_handlers.event_handler_user,
+            "chats": event_handlers.event_handler_chats,
+            "chat": event_handlers.event_handler_chat,
+            "supergroup": event_handlers.event_handler_supergroup,
+            "supergroupFullInfo": event_handlers.event_handler_supergroupFullInfo,
+            "chatMembers": event_handlers.event_handler_chatMembers,
+            "authorizationStateWaitPassword": event_handlers.event_handler_authorizationStateWaitPassword,
+        }
+
         self.send({"@type": "getOption", "name": "version"})
+
         while True:
             event = self.receive(timeout=1.0)
-            if event:
-                self._handle_event(event)
+            if not event:
+                continue
 
-    def _handle_event(self, event):
-        name = event["@type"]
-        event_handler = getattr(event_handlers, f"on_{name}", None)
+            event_type = event.get("@type")
+            handler = handled_events.get(event_type)
 
-        if event_handler:
-            event_handler(self, event)
-        else:
-            # print(f"Unhandled event: {name}")
-            pass
+            if handler:
+                handler(self, event)
 
-    def _menu_loop(self) -> None:
+    def _menu_loop(self):
         while True:
-            menu_handler = getattr(menu_handlers, f"on_{self.menu}", None)
+            self.menu_event.clear()
+            self.current_menu.render(self)
+            choice = input("> ").strip().lower()
+            self.current_menu.handle_choice(self, choice)
+            self.menu_event.wait()
 
-            if menu_handler:
-                self.menu_event.clear()
-                menu_handler(self)
-                self.menu_event.wait()
-            else:
-                print("\nUnhandled menu:", self.menu)
-                self.send({"@type": "close"})
-                break
+    def set_menu(self, menu):
+        self.current_menu = menu
+        self.menu_event.set()
