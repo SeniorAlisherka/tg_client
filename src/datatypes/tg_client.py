@@ -5,7 +5,7 @@ import threading
 from ctypes import CDLL, CFUNCTYPE, c_char_p, c_double, c_int
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
-from src.static_instances import event_handlers
+from src.static_instances import event_dispatchers
 import src.static_instances.menus as menus
 
 
@@ -24,7 +24,7 @@ class TelegramClient:
         self.auth_done = threading.Event()
         self.authorized = threading.Event()
         self.closed = threading.Event()
-        self.current_menu = menus.menu_main
+        self.current_menu = menus.main
         self.menu_event = threading.Event()
         self.state = {}
 
@@ -145,16 +145,15 @@ class TelegramClient:
             self.closed.wait()
 
     def _tdlib_loop(self) -> None:
-        handled_events = {
-            "updateAuthorizationState": event_handlers.event_handler_updateAuthorizationState,
-            "error": event_handlers.event_handler_error,
-            "user": event_handlers.event_handler_user,
-            "chats": event_handlers.event_handler_chats,
-            "chat": event_handlers.event_handler_chat,
-            "supergroup": event_handlers.event_handler_supergroup,
-            "supergroupFullInfo": event_handlers.event_handler_supergroupFullInfo,
-            "chatMembers": event_handlers.event_handler_chatMembers,
-            "authorizationStateWaitPassword": event_handlers.event_handler_authorizationStateWaitPassword,
+        event_dispatchers_by_type = {
+            "updateAuthorizationState": event_dispatchers.updateAuthorizationState,
+            "authorizationStateWaitPassword": event_dispatchers.authorizationStateWaitPassword,
+            "error": event_dispatchers.error,
+            "user": event_dispatchers.user,
+            "chats": event_dispatchers.chats,
+            "chat": event_dispatchers.chat,
+            "supergroupFullInfo": event_dispatchers.supergroupFullInfo,
+            "chatMembers": event_dispatchers.chatMembers,
         }
 
         self.send({"@type": "getOption", "name": "version"})
@@ -165,10 +164,10 @@ class TelegramClient:
                 continue
 
             event_type = event.get("@type")
-            handler = handled_events.get(event_type)
+            event_dispatcher = event_dispatchers_by_type.get(event_type)
 
-            if handler:
-                handler(self, event)
+            if event_dispatcher:
+                event_dispatcher.handle_event(self, event)
 
     def _menu_loop(self):
         while True:

@@ -23,12 +23,12 @@ ls -l td/tdlib
 3) написал свой tg_client.py
 
 Как добавлять любые классы: 
-менюшки называешь типа menu_main
-для каждой менюшки создаешь типа buttons_factory_main
-кнопки называешь типа button_main_1
-действие кнопки называешь типа action_main_1
-event_handlers называешь типа event_handler_updateAuthorizationState
-extra_handlers называешь типа extra_handler_button_main_1
+менюшки называешь типа main
+для каждой менюшки создаешь типа main
+кнопки называешь типа main_1
+действие кнопки называешь типа main_1
+event_handlers называешь типа updateAuthorizationState
+extra_handlers называешь типа updateAuthorizationState_main_1
 helper называешь типа helper_{whatitdoes} типа helper_auth_wait_params
 
 

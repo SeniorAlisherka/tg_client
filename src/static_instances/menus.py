@@ -1,13 +1,17 @@
 from src.datatypes.menu import Menu
 import src.static_instances.button_factories as button_factories
 
-
-menu_main = Menu(
+main = Menu(
     title="Main menu:",
-    buttons_factory=button_factories.buttons_factory_main,
+    buttons_factory=button_factories.main,
 )
 
-menu_channels = Menu(
+channels = Menu(
     title="Channels:",
-    buttons_factory=button_factories.buttons_factory_channels,
+    buttons_factory=button_factories.channels,
+)
+
+channel = Menu(
+    title="Channel {name}:",
+    buttons_factory=button_factories.channel,
 )

@@ -1,11 +1,11 @@
 class Button:
-    def __init__(self, key, label, action):
+    def __init__(self, key, label, button_action):
         self.key = key
         self.label = label
-        self.action = action
+        self.button_action = button_action
 
     def matches(self, choice):
         return choice == self.key
 
     def execute(self, client):
-        self.action(client)
+        self.button_action(client)
