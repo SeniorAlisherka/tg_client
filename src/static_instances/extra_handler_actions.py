@@ -48,7 +48,7 @@ def supergroupFullInfo_channel_2(client, event):
 def chatMembers_channel_2(client, event):
     extra = event["@extra"]
 
-    if extra.get("task_id") != client.current_task_id:
+    if extra["task_id"] != client.current_task_id:
         return  # stale response, ignore
     if client.is_current_task_cancelled():
         return  # task was cancelled

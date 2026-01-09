@@ -166,7 +166,7 @@ class TelegramClient:
             if not event:
                 continue
 
-            event_type = event.get("@type")
+            event_type = event["@type"]
             event_dispatcher = event_dispatchers_by_type.get(event_type)
 
             if event_dispatcher:

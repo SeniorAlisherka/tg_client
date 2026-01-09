@@ -21,7 +21,7 @@ def channels_b(client):
 
 def channels_index(index):
     def _action(client):
-        channels = client.state.get("channels", [])
+        channels = client.state["channels"]
         if 0 <= index < len(channels):
             client.state["current_channel"] = channels[index]
         ch = channels[index]
@@ -32,7 +32,7 @@ def channels_index(index):
 
 
 def channel_1(client):
-    channel = client.state.get("current_channel")
+    channel = client.state["current_channel"]
     supergroup_id = channel["type"]["supergroup_id"]
     print(f"\nSupergroup ID: {supergroup_id}")
     client.menu_event.set()
@@ -40,7 +40,7 @@ def channel_1(client):
 
 def channel_2(client):
 
-    channel = client.state.get("current_channel")
+    channel = client.state["current_channel"]
     supergroup_id = channel["type"]["supergroup_id"]
     names = helpers.fetch_google_sheet_names(supergroup_id)
 

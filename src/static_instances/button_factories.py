@@ -14,7 +14,7 @@ def main(client):
 
 def channels(client):
     result = []
-    channels = client.state.get("channels", [])
+    channels = client.state["channels"]
 
     for i, ch in enumerate(channels, 1):
         result.append(
