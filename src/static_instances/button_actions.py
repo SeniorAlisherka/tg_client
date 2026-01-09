@@ -1,13 +1,14 @@
+# src/static_instances/button_actions.py
 from src.static_instances import helpers
 from src.static_instances import menus
 
 
 def main_1(client):
-    client.send({"@type": "getMe", "@extra": "main_1"})
+    client.send({"@type": "getMe", "@extra": {"@type": "main_1"}})
 
 
 def main_2(client):
-    client.send({"@type": "getChats", "limit": 100000, "@extra": "main_2"})
+    client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_2"}})
 
 
 def main_q(client):
@@ -38,6 +39,7 @@ def channel_1(client):
 
 
 def channel_2(client):
+
     channel = client.state.get("current_channel")
     supergroup_id = channel["type"]["supergroup_id"]
     names = helpers.fetch_google_sheet_names(supergroup_id)
@@ -53,11 +55,16 @@ def channel_2(client):
         "missing": [],
         "supergroup_id": supergroup_id,
     }
+
+    # for long tasks with cancel use current_task_id to track and avoid stale responses
+    # and start cancel listener (but not here, rather when we approve taht we have rights
+    # to view members)
+    client.current_task_id += 1
     client.send(
         {
             "@type": "getSupergroupFullInfo",
             "supergroup_id": supergroup_id,
-            "@extra": "channel_2",
+            "@extra": {"@type": "channel_2", "task_id": client.current_task_id},
         }
     )
 

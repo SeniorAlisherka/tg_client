@@ -1,3 +1,4 @@
+# src/datatypes/tg_client.py
 import json
 import os
 import sys
@@ -27,6 +28,8 @@ class TelegramClient:
         self.current_menu = menus.main
         self.menu_event = threading.Event()
         self.state = {}
+        self.current_task_cancelled = False
+        self.current_task_id = 0  # for tracking long tasks with cancel
 
     def _load_library(self) -> None:
         lib_path = os.getenv("TDLIB_PATH")
@@ -180,3 +183,27 @@ class TelegramClient:
     def set_menu(self, menu):
         self.current_menu = menu
         self.menu_event.set()
+
+    def start_cancel_listener(self):
+        self.current_task_cancelled = False
+
+        def _listen():
+            while not self.current_task_cancelled:
+                choice = input().strip().lower()
+                if choice == "c":
+                    print("\n❌ Operation cancelled.")
+                    self.current_task_cancelled = True
+                    self.menu_event.set()
+                    return
+            self.menu_event.set()
+
+        threading.Thread(target=_listen, daemon=True).start()
+
+    def is_current_task_cancelled(self) -> bool:
+        return self.current_task_cancelled
+
+    def stop_cancel_listener(self):
+        self.current_task_cancelled = True
+
+    def ask_for_enter(self):
+        print("\nPress Enter to continue...")

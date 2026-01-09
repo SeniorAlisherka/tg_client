@@ -1,3 +1,4 @@
+# src/static_instances/helpers.py
 import os
 import qrcode
 from google.oauth2.service_account import Credentials
@@ -141,7 +142,9 @@ def unhandled_error(client, event):
 
 
 def send_next_member_search(client, state):
+
     if state["index"] == len(state["names"]):
+
         missing = state["missing"]
 
         if not missing:
@@ -151,8 +154,9 @@ def send_next_member_search(client, state):
             for name in missing:
                 print(name)
             print(f"\nTotal missing: {len(missing)}")
-
-        client.menu_event.set()
+        client.stop_cancel_listener()
+        client.ask_for_enter()  # to unblock the waiting cancel listener
+        # no need to set menu_event, when cancel_listener stops, menu_event is set
         return
 
     name = state["names"][state["index"]]
@@ -166,6 +170,10 @@ def send_next_member_search(client, state):
             },
             "offset": 0,
             "limit": 1,
-            "@extra": "channel_2",
+            "@extra": {
+                "@type": "channel_2",
+                "task_id": client.current_task_id,
+            },
+            # everywhere along the task use current_task_id to avoid stale responses too
         }
     )

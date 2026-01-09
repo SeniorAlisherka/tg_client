@@ -1,3 +1,4 @@
+# src/static_instances/default_handlers.py
 from src.static_instances import helpers
 
 

@@ -1,3 +1,4 @@
+# src/static_instances/extra_handler_actions.py
 from src.static_instances import menus
 from src.static_instances.helpers import send_next_member_search
 
@@ -16,7 +17,7 @@ def chats_main_2(client, event):
             {
                 "@type": "getChat",
                 "chat_id": chat_id,
-                "@extra": "main_2",
+                "@extra": {"@type": "main_2"},
             }
         )
 
@@ -40,10 +41,18 @@ def supergroupFullInfo_channel_2(client, event):
         return
 
     state = client.state["member_search"]
+    client.start_cancel_listener()
     send_next_member_search(client, state)
 
 
 def chatMembers_channel_2(client, event):
+    extra = event["@extra"]
+
+    if extra.get("task_id") != client.current_task_id:
+        return  # stale response, ignore
+    if client.is_current_task_cancelled():
+        return  # task was cancelled
+
     state = client.state["member_search"]
 
     members = event["members"]
@@ -53,7 +62,9 @@ def chatMembers_channel_2(client, event):
         state["missing"].append(state["names"][state["index"]])
 
     state["index"] += 1
-    print(f"Checked {state['index']} of {len(state['names'])}...")
+    print(
+        f"Checked {state['index']} of {len(state['names'])}... (press c + Enter to cancel)"
+    )
     send_next_member_search(client, state)
 
 

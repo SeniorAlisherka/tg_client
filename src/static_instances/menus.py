@@ -1,3 +1,4 @@
+# src/static_instances/menus.py
 from src.datatypes.menu import Menu
 import src.static_instances.button_factories as button_factories
 

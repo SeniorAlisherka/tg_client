@@ -1,3 +1,4 @@
+# src/static_instances/event_dispatchers.py
 from src.datatypes.event_dispatcher import EventDispatcher
 from src.static_instances import default_handlers
 from src.static_instances import extra_handlers

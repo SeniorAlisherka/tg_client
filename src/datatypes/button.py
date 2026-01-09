@@ -1,3 +1,4 @@
+# src/datatypes/button.py
 class Button:
     def __init__(self, key, label, button_action):
         self.key = key

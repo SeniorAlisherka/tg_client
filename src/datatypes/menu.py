@@ -1,3 +1,4 @@
+# src/datatypes/menu.py
 class Menu:
     def __init__(self, title, buttons_factory):
         self.title = title

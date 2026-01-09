@@ -1,3 +1,4 @@
+# src/datatypes/event_dispatcher.py
 class EventDispatcher:
     def __init__(self, extra_handlers, default_handler):
         self.extra_handlers = extra_handlers
