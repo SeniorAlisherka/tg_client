@@ -70,4 +70,4 @@ def channel_2(client):
 
 
 def channel_b(client):
-    client.set_menu(menus.channels)
+    main_2(client)  # not just set menu because channels may have changed
