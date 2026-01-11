@@ -155,8 +155,9 @@ class TelegramClient:
             "user": event_dispatchers.user,
             "chats": event_dispatchers.chats,
             "chat": event_dispatchers.chat,
-            "supergroupFullInfo": event_dispatchers.supergroupFullInfo,
             "chatMembers": event_dispatchers.chatMembers,
+            "users": event_dispatchers.users,
+            "supergroup": event_dispatchers.supergroup,
         }
 
         self.send({"@type": "getOption", "name": "version"})
@@ -177,6 +178,7 @@ class TelegramClient:
             self.menu_event.clear()
             self.current_menu.render(self)
             choice = input("> ").strip().lower()
+            os.system("clear")
             self.current_menu.handle_choice(self, choice)
             self.menu_event.wait()
 
@@ -193,8 +195,6 @@ class TelegramClient:
                 if choice == "c":
                     print("\n❌ Operation cancelled.")
                     self.current_task_cancelled = True
-                    self.menu_event.set()
-                    return
             self.menu_event.set()
 
         threading.Thread(target=_listen, daemon=True).start()

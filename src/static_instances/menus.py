@@ -16,3 +16,13 @@ channel = Menu(
     title="Channel {name}:",
     buttons_factory=button_factories.channel,
 )
+
+supergroups = Menu(
+    title="Supergroups:",
+    buttons_factory=button_factories.supergroups,
+)
+
+supergroup = Menu(
+    title="Supergroup {name}:",
+    buttons_factory=button_factories.supergroup,
+)

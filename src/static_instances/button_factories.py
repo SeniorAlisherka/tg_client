@@ -8,6 +8,7 @@ def main(client):
     return [
         buttons.main_1,
         buttons.main_2,
+        buttons.main_3,
         buttons.main_q,
     ]
 
@@ -34,4 +35,29 @@ def channel(client):
         buttons.channel_1,
         buttons.channel_2,
         buttons.channel_b,
+    ]
+
+
+def supergroups(client):
+    result = []
+    supergroups = client.state["supergroups"]
+
+    for i, sg in enumerate(supergroups, 1):
+        result.append(
+            Button(
+                key=str(i),
+                label=f"{i}) {sg['title']}",
+                button_action=button_actions.supergroups_index(i - 1),
+            )
+        )
+
+    result.append(buttons.supergroups_b)
+    return result
+
+
+def supergroup(client):
+    return [
+        buttons.supergroup_1,
+        buttons.supergroup_2,
+        buttons.supergroup_b,
     ]

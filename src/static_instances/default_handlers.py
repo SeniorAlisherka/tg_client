@@ -80,9 +80,13 @@ def supergroup(client, event):
     pass
 
 
-def supergroupFullInfo(client, event):
+def chatMembers(client, event):
     pass
 
 
-def chatMembers(client, event):
+def users(client, event):
+    pass
+
+
+def supergroupInfo(client, event):
     pass

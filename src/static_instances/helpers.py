@@ -5,7 +5,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 
 
-def fetch_google_sheet_names(supergroup_id):
+def fetch_google_sheet_names(chat_id):
 
     service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
     spreadsheet_id = os.getenv("GOOGLE_USERS_SPREADSHEET_ID")
@@ -26,19 +26,19 @@ def fetch_google_sheet_names(supergroup_id):
 
     values = response.get("values", [])
     names = []
-    filter_id = supergroup_id
+    filter_id = chat_id
 
     for row in values:
         if len(row) != 2:
             print("Skipping invalid row in Google Sheet:", row)
             continue
         row_name = row[0].strip()
-        row_supergroup_id = row[1].strip()
-        if row_name in ("", "#N/A") or row_supergroup_id in ("", "#N/A"):
+        row_chat_id = row[1].strip()
+        if row_name in ("", "#N/A") or row_chat_id in ("", "#N/A"):
             print("Skipping invalid row in Google Sheet:", row)
             continue
 
-        if str(row_supergroup_id) != str(filter_id):
+        if str(row_chat_id) != str(filter_id):
             continue
 
         names.append(row_name)
@@ -162,13 +162,10 @@ def send_next_member_search(client, state):
     name = state["names"][state["index"]]
     client.send(
         {
-            "@type": "getSupergroupMembers",
-            "supergroup_id": state["supergroup_id"],
-            "filter": {
-                "@type": "supergroupMembersFilterContacts",
-                "query": name,
-            },
-            "offset": 0,
+            "@type": "searchChatMembers",
+            "chat_id": state["chat_id"],
+            "filter": {"@type": "chatMembersFilterContacts"},
+            "query": name,
             "limit": 1,
             "@extra": {
                 "@type": "channel_2",
@@ -177,3 +174,39 @@ def send_next_member_search(client, state):
             # everywhere along the task use current_task_id to avoid stale responses too
         }
     )
+
+
+def load_google_users():
+    creds = Credentials.from_service_account_file(
+        os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"],
+        scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    )
+
+    service = build("sheets", "v4", credentials=creds)
+
+    sheet = (
+        service.spreadsheets()
+        .values()
+        .get(
+            spreadsheetId=os.environ["GOOGLE_USERS_SPREADSHEET_ID"],
+            range=os.environ["GOOGLE_USERS_SHEET_RANGE"],
+        )
+        .execute()
+    )
+
+    return sheet.get("values", [])
+
+
+def build_sheet_lookup(rows):
+    lookup = set()
+
+    for row in rows:
+        if len(row) < 2:
+            continue
+
+        name = row[0].strip()
+        chat_id = row[1].strip()
+
+        lookup.add((name, chat_id))
+
+    return lookup

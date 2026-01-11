@@ -11,6 +11,10 @@ def main_2(client):
     client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_2"}})
 
 
+def main_3(client):
+    client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_3"}})
+
+
 def main_q(client):
     client.send({"@type": "close"})
 
@@ -22,8 +26,7 @@ def channels_b(client):
 def channels_index(index):
     def _action(client):
         channels = client.state["channels"]
-        if 0 <= index < len(channels):
-            client.state["current_channel"] = channels[index]
+        client.state["current_channel"] = channels[index]
         ch = channels[index]
         menus.channel.title = f"Channel {ch['title']}:"
         client.set_menu(menus.channel)
@@ -33,16 +36,16 @@ def channels_index(index):
 
 def channel_1(client):
     channel = client.state["current_channel"]
-    supergroup_id = channel["type"]["supergroup_id"]
-    print(f"\nSupergroup ID: {supergroup_id}")
+    chat_id = channel["id"]
+    print(f"\nChat ID: {chat_id}")
     client.menu_event.set()
 
 
 def channel_2(client):
 
     channel = client.state["current_channel"]
-    supergroup_id = channel["type"]["supergroup_id"]
-    names = helpers.fetch_google_sheet_names(supergroup_id)
+    chat_id = channel["id"]
+    names = helpers.fetch_google_sheet_names(chat_id)
 
     if not names:
         print("\nNo valid students found in Google Sheet for this channel.")
@@ -53,21 +56,56 @@ def channel_2(client):
         "names": names,
         "index": 0,
         "missing": [],
-        "supergroup_id": supergroup_id,
+        "chat_id": chat_id,
     }
 
     # for long tasks with cancel use current_task_id to track and avoid stale responses
     # and start cancel listener (but not here, rather when we approve taht we have rights
     # to view members)
     client.current_task_id += 1
-    client.send(
-        {
-            "@type": "getSupergroupFullInfo",
-            "supergroup_id": supergroup_id,
-            "@extra": {"@type": "channel_2", "task_id": client.current_task_id},
-        }
-    )
+    client.start_cancel_listener()
+    helpers.send_next_member_search(client, client.state["member_search"])
 
 
 def channel_b(client):
     main_2(client)  # not just set menu because channels may have changed
+
+
+def supergroups_index(index):
+    def _action(client):
+        supergroups = client.state["supergroups"]
+        client.state["current_supergroup"] = supergroups[index]
+        sg = supergroups[index]
+        menus.supergroup.title = f"Supergroup {sg['title']}:"
+        client.set_menu(menus.supergroup)
+
+    return _action
+
+
+def supergroups_b(client):
+    client.set_menu(menus.main)
+
+
+def supergroup_1(client):
+    chat = client.state["current_supergroup"]
+    chat_id = chat["id"]
+    print(f"\nChat ID: {chat_id}")
+    client.menu_event.set()
+
+
+def supergroup_2(client):
+    sg = client.state["current_supergroup"]
+    supergroup_id = sg["type"]["supergroup_id"]
+
+    # Ask TDLib for supergroup info (to get member_count)
+    client.send(
+        {
+            "@type": "getSupergroup",
+            "supergroup_id": supergroup_id,
+            "@extra": {"@type": "supergroup_2"},
+        }
+    )
+
+
+def supergroup_b(client):
+    main_3(client)  # not just set menu because supergroups may have changed

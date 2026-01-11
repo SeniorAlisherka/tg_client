@@ -24,7 +24,7 @@ ls -l td/tdlib
 
 Как добавлять любые классы: 
 менюшки называешь типа main
-для каждой менюшки создаешь типа main
+для каждой менюшки создаешь button_factory типа main
 кнопки называешь типа main_1
 действие кнопки называешь типа main_1
 event_handlers называешь типа updateAuthorizationState
@@ -46,3 +46,4 @@ update - handler - update - handler - update ...
 при сборке: 
 1) чекнуть работу logs (db)
 2) в .env есть полный путь
+3) терминал пишет clear
