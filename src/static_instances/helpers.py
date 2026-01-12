@@ -3,11 +3,12 @@ import os
 import qrcode
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+from src.utils.paths import app_root_dir, app_support_dir
 
 
 def fetch_google_sheet_names(chat_id):
 
-    service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+    service_account_json = app_root_dir() / os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
     spreadsheet_id = os.getenv("GOOGLE_USERS_SPREADSHEET_ID")
     sheet_range = os.getenv("GOOGLE_USERS_SHEET_RANGE")
 
@@ -52,10 +53,11 @@ def auth_closed(client, event):
 
 
 def auth_wait_params(client, event):
+    tdlib_data_dir = app_support_dir("TG Client") / "tdlib_data"
     client.send(
         {
             "@type": "setTdlibParameters",
-            "database_directory": "./logs/tdlib_data",
+            "database_directory": str(tdlib_data_dir),
             "api_id": client.api_id,
             "api_hash": client.api_hash,
             "system_language_code": "en",
@@ -178,7 +180,7 @@ def send_next_member_search(client, state):
 
 def load_google_users():
     creds = Credentials.from_service_account_file(
-        os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"],
+        app_root_dir() / os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"),
         scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"],
     )
 

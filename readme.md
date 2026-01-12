@@ -35,6 +35,7 @@ ls -l td/tdlib
   - Каждые статические инстансы засовываем в static_instances (функции это тоже статические инстансы класса функция).
   - Если для выполнения функции нужен shared_state в клиенте, то стараемся не засорять клиент и использовать уже использованный state как например pending (он каждый раз сбрасывается и используется заново для новых запросов).
 - Создал `requirements.txt`.
+- Создал `build_app.sh` + `chmod +x ./build_app.sh`
 
 
 ## Как добавлять любые классы
@@ -60,11 +61,11 @@ ls -l td/tdlib
    update - handler - update - handler - update ...
    Поэтому только так.
 
-## При сборке
+## Запуск
 
-1) Чекнуть работу `logs` (db).
-2) В `.env` есть полный путь.
-3) Терминал пишет `clear`.
+1) Активировать venv (для обоих случаев)
+1) Можно просто запустить main.py 
+2) Можно запустить build_app.sh и получить exe в dist.
 
 ## Доп заметки
 
@@ -74,5 +75,5 @@ ls -l td/tdlib
 
 ## Структура данных в Google Sheets
 
-![Google Sheets 1](materials/google_sheets_1.png)
-![Google Sheets 2](materials/google_sheets_2.png)
+![Google Sheets 1](pictures/google_sheets_1.png)
+![Google Sheets 2](pictures/google_sheets_2.png)

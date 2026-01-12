@@ -8,11 +8,12 @@ from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 from src.static_instances import event_dispatchers
 import src.static_instances.menus as menus
+from src.utils.paths import app_root_dir
 
 
 class TelegramClient:
     def __init__(self) -> None:
-        load_dotenv()
+        load_dotenv(app_root_dir() / ".env")
         self.api_id = int(os.getenv("TG_API_ID"))
         self.api_hash = os.getenv("TG_API_HASH")
 
@@ -32,8 +33,8 @@ class TelegramClient:
         self.current_task_id = 0  # for tracking long tasks with cancel
 
     def _load_library(self) -> None:
-        lib_path = os.getenv("TDLIB_PATH")
-        self.tdjson = CDLL(lib_path)
+        tdlib_path = app_root_dir() / os.getenv("TDLIB_PATH")
+        self.tdjson = CDLL(str(tdlib_path))
 
     def _setup_functions(self) -> None:
         self._td_create_client_id = self.tdjson.td_create_client_id
@@ -129,6 +130,7 @@ class TelegramClient:
         return None
 
     def run(self) -> None:
+        os.system("clear")
         try:
             td_thread = threading.Thread(target=self._tdlib_loop, daemon=True)
             td_thread.start()
