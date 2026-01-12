@@ -9,6 +9,7 @@ def main(client):
         buttons.main_1,
         buttons.main_2,
         buttons.main_3,
+        buttons.main_4,
         buttons.main_q,
     ]
 
@@ -59,5 +60,6 @@ def supergroup(client):
     return [
         buttons.supergroup_1,
         buttons.supergroup_2,
+        buttons.supergroup_3,
         buttons.supergroup_b,
     ]

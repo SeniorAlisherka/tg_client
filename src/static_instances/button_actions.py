@@ -8,11 +8,38 @@ def main_1(client):
 
 
 def main_2(client):
-    client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_2"}})
+    # client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_2"}})
+    in_development_text = (
+        "\n⚠️ The Channels feature is under development and may not work as expected.\n"
+        "Please use Supergroups feature instead for now.\n"
+    )
+    print(in_development_text)
+    client.menu_event.set()
 
 
 def main_3(client):
     client.send({"@type": "getChats", "limit": 100000, "@extra": {"@type": "main_3"}})
+
+
+def main_4(client):
+    help_text = (
+        "\nThis app looks for missing students or nonames in any supergroup.\n"
+        "To do that you need to go to supergroups tabs, select the desired supergroup "
+        "and then press the corresponding button.\n\n"
+        "If you cannot find your group in supergroups tabs, it means it is a basic group.\n"
+        "To upgrade a basic group to a supergroup, you need to go to the group settings "
+        'in Telegram app and just press "Topics" once (no need to create them).\n'
+        "After that, go back to the main menu of this app and re-enter the supergroups tab.\n\n"
+        "To add a new program, you need to do the following ONCE:\n"
+        "1) Choose your supergroup.\n"
+        '2) Press "Chat ID" button and copy the chat ID.\n'
+        '3) In your Google Sheet list called "IDS", add a new row with the '
+        "program name in the first column and the copied chat ID in the second column.\n"
+        "4) Add all students of the program to your contacts in Telegram app.\n"
+    )
+
+    print(help_text)
+    client.menu_event.set()
 
 
 def main_q(client):
@@ -103,6 +130,22 @@ def supergroup_2(client):
             "@type": "getSupergroup",
             "supergroup_id": supergroup_id,
             "@extra": {"@type": "supergroup_2"},
+        }
+    )
+
+
+def supergroup_3(client):
+    sg = client.state["current_supergroup"]
+    supergroup_id = sg["type"]["supergroup_id"]
+
+    client.state["non_contacts"] = []
+    client.state["user_ids"] = []
+
+    client.send(
+        {
+            "@type": "getSupergroup",
+            "supergroup_id": supergroup_id,
+            "@extra": {"@type": "supergroup_3"},
         }
     )
 

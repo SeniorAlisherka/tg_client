@@ -1,6 +1,7 @@
 # src/static_instances/extra_handler_actions.py
 from src.static_instances import menus
 from src.static_instances import helpers
+import pydoc
 
 
 def user_main_1(client, event):
@@ -53,7 +54,6 @@ def chat_main_3(client, event):
 
     if chat_type["@type"] == "chatTypeSupergroup" and not chat_type["is_channel"]:
         client.state["supergroups"].append(event)
-
     client.state["pending"] -= 1
 
     if client.state["pending"] == 0:
@@ -102,15 +102,11 @@ def error_channel_2(client, event):
 def supergroup_supergroup_2(client, event):
     supergroup_id = event["id"]
     member_count = event["member_count"]
-
     limit = 200
 
     client.state["user_ids"] = []
     client.state["pending"] = (member_count + limit - 1) // limit
-    if client.state["pending"] == 0:
-        print("\nNo members in this supergroup.")
-        client.menu_event.set()
-        return
+
     for offset in range(0, member_count, limit):
         client.send(
             {
@@ -188,9 +184,91 @@ def user_supergroup_2(client, event):
         if (name, current_chat_id) in sheet_lookup:
             missing_students.append(name)
 
-    print("\nMissing students:")
-    for name in missing_students:
-        print(name)
+    lines = []
+    lines.append("\nMissing students:")
 
-    print(f"\nTotal missing students: {len(missing_students)}")
+    for name in missing_students:
+        lines.append(name)
+
+    lines.append(f"\nTotal missing students: {len(missing_students)}")
+
+    pydoc.pager("\n".join(lines))
+    client.menu_event.set()
+
+
+def supergroup_supergroup_3(client, event):
+    supergroup_id = event["id"]
+    member_count = event["member_count"]
+    limit = 200
+
+    client.state["user_ids"] = []
+    client.state["pending"] = (member_count + limit - 1) // limit
+
+    for offset in range(0, member_count, limit):
+        client.send(
+            {
+                "@type": "getSupergroupMembers",
+                "supergroup_id": supergroup_id,
+                "offset": offset,
+                "limit": limit,
+                "@extra": {"@type": "supergroup_3"},
+            }
+        )
+
+
+def chatMembers_supergroup_3(client, event):
+    for member in event["members"]:
+        client.state["user_ids"].append(member["member_id"]["user_id"])
+
+    client.state["pending"] -= 1
+
+    if client.state["pending"] == 0:
+        client.state["pending"] = len(client.state["user_ids"])
+        for user_id in client.state["user_ids"]:
+            client.send(
+                {
+                    "@type": "getUser",
+                    "user_id": user_id,
+                    "@extra": {"@type": "supergroup_3"},
+                }
+            )
+
+
+def user_supergroup_3(client, event):
+    if not event.get("is_contact", False):
+        client.state["non_contacts"].append(
+            {
+                "first_name": event["first_name"],
+                "last_name": event["last_name"],
+                "usernames": event.get("usernames", {}).get("active_usernames", []),
+                "phone_number": event["phone_number"],
+            }
+        )
+
+    client.state["pending"] -= 1
+
+    if client.state["pending"] != 0:
+        return
+
+    # === DONE ===
+    non_contacts = client.state["non_contacts"]
+
+    lines = []
+
+    lines.append("\nNon-contact members:")
+
+    for u in non_contacts:
+        name = f"{u['first_name']} {u['last_name']}".strip()
+        username = "@" + u["usernames"][0] if u["usernames"] else "—"
+        phone = u["phone_number"] or "—"
+
+        lines.append("────────────────────────────")
+        lines.append(f"👤 {name}")
+        lines.append(f"🔗 {username}")
+        lines.append(f"📞 {phone}")
+
+    lines.append(f"\nTotal non-contacts: {len(non_contacts)}")
+
+    pydoc.pager("\n".join(lines))
+
     client.menu_event.set()
