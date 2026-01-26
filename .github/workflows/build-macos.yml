@@ -46,11 +46,25 @@ jobs:
           echo "DEV_MODE=${{ secrets.DEV_MODE }}" >> .env
 
       # --- Build executable ---
-      - name: Build binary
+      - name: Build application
         run: |
           chmod +x ./build_app.sh
           ./build_app.sh
 
+      # --- Install DMG ---
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      # --- Create DMG ---
+      - name: Create DMG
+        run: |
+          create-dmg \
+            --volname "TG Client" \
+            --window-size 500 300 \
+            --app-drop-link 350 150 \
+            dist/TG_Client.dmg \
+            dist/TG_Client.app
+      
       # --- Create GitHub Release with asset ---
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -58,6 +72,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: |
-            dist/TG_Client
+            dist/TG_Client.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
