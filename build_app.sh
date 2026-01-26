@@ -19,6 +19,8 @@ pyinstaller \
   --target-arch "$ARCH" \
   --add-data ".env:." \
   --add-data "materials:materials" \
+  --add-binary "lib/libtdjson.dylib:lib" \
+  --add-binary "lib/libtdjson.1.8.58.dylib:lib" \
   main.py
 
 # Clean build artifacts
