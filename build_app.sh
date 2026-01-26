@@ -51,32 +51,18 @@ chmod +x "dist/${APP_NAME}.app/Contents/MacOS/launcher"
 # Info.plist
 cat > "dist/${APP_NAME}.app/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
- "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key>
-  <string>$APP_NAME</string>
-
   <key>CFBundleExecutable</key>
   <string>launcher</string>
 
   <key>CFBundleIconFile</key>
   <string>icon</string>
 
-  <key>CFBundleIdentifier</key>
-  <string>com.alisherka.tgclient</string>
-
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-
-  <key>LSUIElement</key>
-  <false/>
-
-  <key>CFBundleVersion</key>
-  <string>1.0</string>
 </dict>
 </plist>
 EOF
+
 
 echo "✅ App built successfully!"

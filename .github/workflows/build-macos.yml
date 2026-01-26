@@ -48,8 +48,8 @@ jobs:
       # --- Build executable ---
       - name: Build binary
         run: |
-          chmod +x ./build_exec.sh
-          ./build_exec.sh
+          chmod +x ./build_app.sh
+          ./build_app.sh
 
       # --- Create GitHub Release with asset ---
       - name: Create Release

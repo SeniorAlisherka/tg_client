@@ -4,6 +4,7 @@ import qrcode
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from src.utils.paths import app_root_dir, app_support_dir
+from getpass import getpass
 
 
 def fetch_google_sheet_names(chat_id):
@@ -49,6 +50,7 @@ def fetch_google_sheet_names(chat_id):
 
 def auth_closed(client, event):
     print("\n🛑 TDLib closed cleanly.")
+    client.auth_done.set()
     client.closed.set()
 
 
@@ -83,7 +85,7 @@ def auth_wait_qr(client, event):
     qr = qrcode.QRCode()
     qr.add_data(link)
     qr.make()
-    qr.print_ascii()
+    qr.print_ascii(tty=True)
 
 
 def auth_wait_password(client, event):
@@ -91,7 +93,7 @@ def auth_wait_password(client, event):
     if hint:
         print(f"\nPassword hint: {hint}")
 
-    password = input("\nEnter Telegram password: ")
+    password = getpass("\nEnter Telegram password: ")
     client.send(
         {
             "@type": "checkAuthenticationPassword",
@@ -129,6 +131,11 @@ def error_request_aborted(client, event):
     print(f"\n⏳Request aborted")
     client.auth_done.set()
     client.send({"@type": "close"})
+
+
+def error_auth_key_unregistered(client, event):
+    print("\n❌ You did not complete the authorization.")
+    client.auth_done.set()
 
 
 def unhandled_authorization_state(client, event):

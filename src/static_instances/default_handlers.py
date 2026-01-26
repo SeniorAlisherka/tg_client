@@ -60,6 +60,8 @@ def error(client, event):
     elif message == "Request aborted":
         helpers.error_request_aborted(client, event)
 
+    elif message == "AUTH_KEY_UNREGISTERED":
+        helpers.error_auth_key_unregistered(client, event)
     else:
         helpers.unhandled_error(client, event)
 
