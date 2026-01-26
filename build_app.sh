@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-APP_NAME="TG Client"
+APP_NAME="TG_Client"
 ARCH="arm64"
+ICON_SRC="pictures/icon.icns"
 
 rm -rf dist
 
@@ -17,58 +18,65 @@ pyinstaller \
 
 rm -rf build *.spec
 
-# echo "🎁 Wrapping CLI binary into macOS .app bundle..."
+echo "🎁 Wrapping CLI binary into macOS .app bundle..."
 
-# APP_BUNDLE="dist/$APP_NAME.app"
-# BIN_PATH="dist/$APP_NAME"
-# APP_BIN_PATH="$APP_BUNDLE/Contents/Resources/$APP_NAME"
+# Create .app bundle structure explicitly
+mkdir -p "dist/${APP_NAME}.app/Contents/MacOS"
+mkdir -p "dist/${APP_NAME}.app/Contents/Resources"
 
-# mkdir -p "$APP_BUNDLE/Contents/MacOS"
-# mkdir -p "$APP_BUNDLE/Contents/Resources"
+# Copy binary output directly
+cp "dist/${APP_NAME}" "dist/${APP_NAME}.app/Contents/Resources/${APP_NAME}"
 
-# cp "$BIN_PATH" "$APP_BIN_PATH"
+# Copy icon (renamed to icon.icns)
+cp "$ICON_SRC" "dist/${APP_NAME}.app/Contents/Resources/icon.icns"
 
-# cat > "$APP_BUNDLE/Contents/MacOS/launcher" << EOF
-# #!/bin/bash
-# APP_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
-# BIN="\$APP_DIR/../Resources/$APP_NAME"
+# launcher
+cat > "dist/${APP_NAME}.app/Contents/MacOS/launcher" << EOF
+#!/bin/bash
+APP_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+BIN="\$APP_DIR/../Resources/$APP_NAME"
 
-# osascript -e 'on run argv
-#     set binPath to item 1 of argv
-#     tell application "Terminal"
-#         do script (quoted form of binPath)
-#         activate
-#     end tell
-# end run' "\$BIN"
-# EOF
+osascript -e 'on run argv
+    set binPath to item 1 of argv
+    tell application "Terminal"
+        do script (quoted form of binPath)
+        activate
+    end tell
+end run' "\$BIN"
+EOF
 
-# chmod +x "$APP_BUNDLE/Contents/MacOS/launcher"
+# Make launcher executable
+chmod +x "dist/${APP_NAME}.app/Contents/MacOS/launcher"
 
-# cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
-# <?xml version="1.0" encoding="UTF-8"?>
-# <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-#  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-# <plist version="1.0">
-# <dict>
-#   <key>CFBundleName</key>
-#   <string>$APP_NAME</string>
+# Info.plist
+cat > "dist/${APP_NAME}.app/Contents/Info.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>$APP_NAME</string>
 
-#   <key>CFBundleExecutable</key>
-#   <string>launcher</string>
+  <key>CFBundleExecutable</key>
+  <string>launcher</string>
 
-#   <key>CFBundleIdentifier</key>
-#   <string>com.alisherka.tgclient</string>
+  <key>CFBundleIconFile</key>
+  <string>icon</string>
 
-#   <key>CFBundlePackageType</key>
-#   <string>APPL</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.alisherka.tgclient</string>
 
-#   <key>LSUIElement</key>
-#   <false/>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
 
-#   <key>CFBundleVersion</key>
-#   <string>1.0</string>
-# </dict>
-# </plist>
-# EOF
+  <key>LSUIElement</key>
+  <false/>
+
+  <key>CFBundleVersion</key>
+  <string>1.0</string>
+</dict>
+</plist>
+EOF
 
 echo "✅ App built successfully!"
