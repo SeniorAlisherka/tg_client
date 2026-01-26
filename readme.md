@@ -1,10 +1,26 @@
 <p align="center">
-  <a href="https://github.com/alisherka/tg_client/releases/latest/download/TG_Client.dmg">
-    <img src="https://img.shields.io/badge/⬇️ DOWNLOAD%20FOR%20macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
+  <a href="https://github.com/SeniorAlisherka/tg_client/releases/latest/download/TG_Client.dmg">
+    <img src="https://img.shields.io/badge/⬇️%20DOWNLOAD%20FOR%20macOS-000000?style=for-the-badge&logo=apple&logoColor=white" width="600">
   </a>
 </p>
 
-# Что было сделано
+# Установка
+
+1. Нажмите на кнопку сверху, чтобы скачать **TG_Client.dmg**.
+2. Откройте `.dmg` файл и **перетащите приложение** в `Applications`.
+3. Первый запуск будет заблокирован (так как приложение не из App Store).
+
+Чтобы обойти это:
+
+**Настройки → Privacy & Security → Open Anyway**
+
+![Security Check](pictures/security_check.png)
+
+После этого приложение откроется нормально.
+
+
+
+# Для разработчиков
 
 ## Установка и сборка TDLib
 
@@ -42,7 +58,7 @@ ls -l td/tdlib
   - Если для выполнения функции нужен shared_state в клиенте, то стараемся не засорять клиент и использовать уже использованный state как например pending (он каждый раз сбрасывается и используется заново для новых запросов).
 - Создал `requirements.txt`.
 - Создал `build_app.sh` + `chmod +x ./build_app.sh`
-
+- Создал github actions (build-macos.yml)
 
 ## Как добавлять любые классы
 
