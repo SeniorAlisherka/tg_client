@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://github.com/alisherka/tg_client/releases/latest/download/TG_Client.dmg">
+    <img src="https://img.shields.io/badge/⬇️ DOWNLOAD%20FOR%20macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
+  </a>
+</p>
+
 # Что было сделано
 
 ## Установка и сборка TDLib
