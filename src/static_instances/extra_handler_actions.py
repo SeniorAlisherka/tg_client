@@ -262,6 +262,26 @@ def supergroup_supergroup_3(client, event):
         )
 
 
+def supergroup_supergroup_4(client, event):
+    supergroup_id = event["id"]
+    member_count = event["member_count"]
+    limit = 200
+
+    client.state["user_ids"] = []
+    client.state["pending"] = (member_count + limit - 1) // limit
+
+    for offset in range(0, member_count, limit):
+        client.send(
+            {
+                "@type": "getSupergroupMembers",
+                "supergroup_id": supergroup_id,
+                "offset": offset,
+                "limit": limit,
+                "@extra": {"@type": "supergroup_4"},
+            }
+        )
+
+
 def chatMembers_supergroup_3(client, event):
     for member in event["members"]:
         client.state["user_ids"].append(member["member_id"]["user_id"])
@@ -280,8 +300,26 @@ def chatMembers_supergroup_3(client, event):
             )
 
 
+def chatMembers_supergroup_4(client, event):
+    for member in event["members"]:
+        client.state["user_ids"].append(member["member_id"]["user_id"])
+
+    client.state["pending"] -= 1
+
+    if client.state["pending"] == 0:
+        client.state["pending"] = len(client.state["user_ids"])
+        for user_id in client.state["user_ids"]:
+            client.send(
+                {
+                    "@type": "getUser",
+                    "user_id": user_id,
+                    "@extra": {"@type": "supergroup_4"},
+                }
+            )
+
+
 def user_supergroup_3(client, event):
-    if not event.get("is_contact", False):
+    if not event["is_contact"]:
         client.state["non_contacts"].append(
             {
                 "first_name": event["first_name"],
@@ -317,4 +355,41 @@ def user_supergroup_3(client, event):
 
     pydoc.pager("\n".join(lines))
 
+    client.menu_event.set()
+
+
+def user_supergroup_4(client, event):
+    if event["is_contact"]:
+        first_name = event["first_name"]
+        # collect contact members by first_name
+        client.state.setdefault("contacts", []).append(first_name)
+
+    client.state["pending"] -= 1
+
+    if client.state["pending"] != 0:
+        return
+
+    contact_names = set(client.state["contacts"])
+    sheet_rows = helpers.load_google_users()
+    sheet_lookup = helpers.build_sheet_lookup(sheet_rows)
+
+    chat_id = str(client.state["current_supergroup"]["id"])
+    extra = []
+
+    for name in sorted(contact_names):
+        if (name, chat_id) not in sheet_lookup:
+            extra.append(name)
+
+    lines = []
+    lines.append("\nExtra contacts in this group (Лишние контакты):")
+
+    if extra:
+        for name in extra:
+            lines.append(name)
+    else:
+        lines.append("None. All contact names are accounted for in Google Sheet.")
+
+    lines.append(f"\nTotal extra contacts: {len(extra)}")
+
+    pydoc.pager("\n".join(lines))
     client.menu_event.set()

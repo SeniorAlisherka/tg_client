@@ -164,5 +164,21 @@ def supergroup_3(client):
     )
 
 
+def supergroup_4(client):
+    sg = client.state["current_supergroup"]
+    supergroup_id = sg["type"]["supergroup_id"]
+
+    client.state["contacts"] = []
+    client.state["user_ids"] = []
+
+    client.send(
+        {
+            "@type": "getSupergroup",
+            "supergroup_id": supergroup_id,
+            "@extra": {"@type": "supergroup_4"},
+        }
+    )
+
+
 def supergroup_b(client):
     main_3(client)  # not just set menu because supergroups may have changed

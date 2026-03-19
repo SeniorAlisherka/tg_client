@@ -62,5 +62,6 @@ def supergroup(client):
         buttons.supergroup_1,
         buttons.supergroup_2,
         buttons.supergroup_3,
+        buttons.supergroup_4,
         buttons.supergroup_b,
     ]

@@ -11,7 +11,6 @@ chat_main_3 = ExtraHandler("main_3", extra_handler_actions.chat_main_3)
 users_main_5 = ExtraHandler("main_5", extra_handler_actions.users_main_5)
 user_main_5 = ExtraHandler("main_5", extra_handler_actions.user_main_5)
 
-
 chatMembers_channel_2 = ExtraHandler(
     "channel_2", extra_handler_actions.chatMembers_channel_2
 )
@@ -41,4 +40,16 @@ chatMembers_supergroup_3 = ExtraHandler(
 user_supergroup_3 = ExtraHandler(
     "supergroup_3",
     extra_handler_actions.user_supergroup_3,
+)
+supergroup_supergroup_4 = ExtraHandler(
+    "supergroup_4",
+    extra_handler_actions.supergroup_supergroup_4,
+)
+chatMembers_supergroup_4 = ExtraHandler(
+    "supergroup_4",
+    extra_handler_actions.chatMembers_supergroup_4,
+)
+user_supergroup_4 = ExtraHandler(
+    "supergroup_4",
+    extra_handler_actions.user_supergroup_4,
 )
