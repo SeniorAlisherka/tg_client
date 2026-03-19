@@ -5,7 +5,50 @@ import pydoc
 
 
 def user_main_1(client, event):
-    print(f"\n👤 Logged in as {event['first_name']} {event.get('last_name', '')}")
+    print(f"\n👤 Logged in as {event['first_name']} {event['last_name']}")
+    client.menu_event.set()
+
+
+def users_main_5(client, event):
+    contacts_ids = event["user_ids"]
+
+    if not contacts_ids:
+        print("\nNo contacts found.")
+        client.menu_event.set()
+        return
+
+    client.state["contacts_to_process"] = contacts_ids
+    client.state["pending"] = len(contacts_ids)
+    client.state["contacts_data"] = []
+
+    for user_id in contacts_ids:
+        client.send(
+            {
+                "@type": "getUser",
+                "user_id": user_id,
+                "@extra": {"@type": "main_5"},
+            }
+        )
+
+
+def user_main_5(client, event):
+    first_name = event["first_name"]
+    username = event.get("usernames", {}).get("active_usernames", [None])[0]
+
+    if first_name and username:
+        client.state["contacts_data"].append(
+            {
+                "first_name": first_name,
+                "username": username,
+            }
+        )
+
+    client.state["pending"] -= 1
+
+    if client.state["pending"] > 0:
+        return
+
+    helpers.update_google_sheet_usernames(client.state["contacts_data"])
     client.menu_event.set()
 
 

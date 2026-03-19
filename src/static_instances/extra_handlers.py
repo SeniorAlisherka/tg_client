@@ -8,6 +8,9 @@ chats_main_2 = ExtraHandler("main_2", extra_handler_actions.chats_main_2)
 chat_main_2 = ExtraHandler("main_2", extra_handler_actions.chat_main_2)
 chats_main_3 = ExtraHandler("main_3", extra_handler_actions.chats_main_3)
 chat_main_3 = ExtraHandler("main_3", extra_handler_actions.chat_main_3)
+users_main_5 = ExtraHandler("main_5", extra_handler_actions.users_main_5)
+user_main_5 = ExtraHandler("main_5", extra_handler_actions.user_main_5)
+
 
 chatMembers_channel_2 = ExtraHandler(
     "channel_2", extra_handler_actions.chatMembers_channel_2

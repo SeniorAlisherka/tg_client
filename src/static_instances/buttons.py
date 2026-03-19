@@ -11,6 +11,11 @@ main_4 = Button(
     "4) How to use the app?",
     button_actions.main_4,
 )
+main_5 = Button(
+    "5",
+    "5) Sync contacts usernames to Google Sheet",
+    button_actions.main_5,
+)
 main_q = Button("q", "q) Quit", button_actions.main_q)
 
 channels_b = Button("b", "b) Back", button_actions.channels_b)

@@ -24,6 +24,7 @@ user = EventDispatcher(
         extra_handlers.user_main_1,
         extra_handlers.user_supergroup_2,
         extra_handlers.user_supergroup_3,
+        extra_handlers.user_main_5,
     ],
     default_handler=default_handlers.user,
 )
@@ -56,6 +57,7 @@ chatMembers = EventDispatcher(
 users = EventDispatcher(
     extra_handlers=[
         extra_handlers.users_supergroup_2,
+        extra_handlers.users_main_5,
     ],
     default_handler=default_handlers.users,
 )

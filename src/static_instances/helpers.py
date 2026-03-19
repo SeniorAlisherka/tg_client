@@ -206,6 +206,62 @@ def load_google_users():
     return sheet.get("values", [])
 
 
+def update_google_sheet_usernames(contacts_data):
+    if not contacts_data:
+        print("\nNo contacts_data with usernames to sync.")
+        return
+
+    sheet_rows = load_google_users()
+    if not sheet_rows:
+        print("\nNo values found in Google Sheet.")
+        return
+
+    spreadsheet_id = os.getenv("GOOGLE_USERS_SPREADSHEET_ID")
+    sheet_range = os.getenv("GOOGLE_USERS_SHEET_RANGE")
+    sheet_name = sheet_range.split("!")[0]
+
+    updates = []
+
+    for idx, row in enumerate(sheet_rows, start=1):
+        if idx == 1 or len(row) < 1:
+            continue
+
+        sheet_name_value = row[0].strip()
+
+        for contact in contacts_data:
+            contact_name = contact["first_name"]
+            username = contact["username"]
+
+            if sheet_name_value == contact_name:
+                updates.append(
+                    {
+                        "range": f"{sheet_name}!E{idx}",
+                        "values": [[username]],
+                    }
+                )
+                break
+
+    if not updates:
+        print("No matches found.")
+        return
+
+    creds = Credentials.from_service_account_file(
+        app_root_dir() / os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"),
+        scopes=["https://www.googleapis.com/auth/spreadsheets"],
+    )
+    service = build("sheets", "v4", credentials=creds)
+
+    service.spreadsheets().values().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={
+            "valueInputOption": "RAW",
+            "data": updates,
+        },
+    ).execute()
+
+    print(f"Updated {len(updates)} usernames.")
+
+
 def build_sheet_lookup(rows):
     lookup = set()
 

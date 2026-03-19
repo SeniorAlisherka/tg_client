@@ -36,10 +36,24 @@ def main_4(client):
         '3) In your Google Sheet list called "IDS", add a new row with the '
         "program name in the first column and the copied chat ID in the second column.\n"
         "4) Add all students of the program to your contacts in Telegram app.\n"
+        "Another feature you can use is syncing contacts usernames to Google Sheet. To do that, just press the corresponding button in the main menu.\n"
     )
 
     print(help_text)
     client.menu_event.set()
+
+
+def main_5(client):
+    client.state["contacts_to_process"] = []
+    client.state["contacts_data"] = []
+    client.state["pending"] = 0
+
+    client.send(
+        {
+            "@type": "getContacts",
+            "@extra": {"@type": "main_5"},
+        }
+    )
 
 
 def main_q(client):

@@ -10,6 +10,7 @@ def main(client):
         buttons.main_2,
         buttons.main_3,
         buttons.main_4,
+        buttons.main_5,
         buttons.main_q,
     ]
 
