@@ -219,3 +219,70 @@ def build_sheet_lookup(rows):
         lookup.add((name, chat_id))
 
     return lookup
+
+
+def set_present_in_channel_for_chat(current_chat_id, missing_students):
+    """Marks non-missing students as present_in_channel=true in the Google Sheet."""
+    sheet_rows = load_google_users()
+    if not sheet_rows:
+        print("No values found in Google Sheet for updating present_in_channel.")
+        return
+
+    spreadsheet_id = os.getenv("GOOGLE_USERS_SPREADSHEET_ID")
+    sheet_range = os.getenv("GOOGLE_USERS_SHEET_RANGE")
+    if not spreadsheet_id or not sheet_range:
+        print(
+            "Missing Google Sheets env vars for update: GOOGLE_USERS_SPREADSHEET_ID or GOOGLE_USERS_SHEET_RANGE"
+        )
+        return
+
+    sheet_name = sheet_range.split("!")[0]
+
+    updates = []
+
+    for idx, row in enumerate(sheet_rows, start=1):
+        if idx == 1:
+            continue  # skip header row
+
+        if len(row) < 2:
+            continue
+
+        row_chat_id = row[1].strip()
+        if str(row_chat_id) != str(current_chat_id):
+            continue
+
+        row_name = row[0].strip()
+        if not row_name or row_name in missing_students:
+            continue
+
+        updates.append(
+            {
+                "range": f"{sheet_name}!D{idx}",
+                "majorDimension": "ROWS",
+                "values": [["true"]],
+            }
+        )
+
+    if not updates:
+        # print("No non-missing students to mark present_in_channel for this chat.")
+        return
+
+    creds = Credentials.from_service_account_file(
+        app_root_dir() / os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"),
+        scopes=["https://www.googleapis.com/auth/spreadsheets"],
+    )
+    service = build("sheets", "v4", credentials=creds)
+
+    body = {
+        "valueInputOption": "RAW",
+        "data": updates,
+    }
+
+    response = (
+        service.spreadsheets()
+        .values()
+        .batchUpdate(spreadsheetId=spreadsheet_id, body=body)
+        .execute()
+    )
+
+    # print(f"Updated present_in_channel for {len(updates)} rows in Google Sheet.")

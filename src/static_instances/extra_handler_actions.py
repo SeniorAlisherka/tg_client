@@ -184,6 +184,9 @@ def user_supergroup_2(client, event):
         if (name, current_chat_id) in sheet_lookup:
             missing_students.append(name)
 
+    # Mark non-missing registered students in sheet as present_in_channel=true
+    helpers.set_present_in_channel_for_chat(current_chat_id, missing_students)
+
     lines = []
     lines.append("\nMissing students:")
 
