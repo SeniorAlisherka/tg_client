@@ -33,6 +33,7 @@ def users_main_5(client, event):
 
 def user_main_5(client, event):
     first_name = event["first_name"]
+    program = event["last_name"]
     username = event.get("usernames", {}).get("active_usernames", [None])[0]
 
     if first_name and username:
@@ -40,6 +41,7 @@ def user_main_5(client, event):
             {
                 "first_name": first_name,
                 "username": username,
+                "program": program,
             }
         )
 
@@ -183,61 +185,66 @@ def users_supergroup_2(client, event):
     contacts_ids = event["user_ids"]
     group_members_ids = client.state["user_ids"]
 
-    missing_ids = [uid for uid in contacts_ids if uid not in group_members_ids]
-
-    if not missing_ids:
-        print("\n✅ All your contacts are in this supergroup.")
+    if not contacts_ids:
+        print("\nNo contacts provided.")
         client.menu_event.set()
         return
 
-    client.state["names"] = []
-    client.state["pending"] = len(missing_ids)
+    missing_ids = [uid for uid in contacts_ids if uid not in group_members_ids]
+    present_ids = [uid for uid in contacts_ids if uid in group_members_ids]
 
+    # Prepare state
+    client.state["missing_ids"] = missing_ids
+    client.state["present_ids"] = present_ids
+
+    client.state["missing_names"] = []
+    client.state["present_names"] = []
+
+    client.state["pending"] = len(missing_ids) + len(present_ids)
+
+    # Request ALL users (both missing + present)
     for user_id in missing_ids:
         client.send(
             {
                 "@type": "getUser",
                 "user_id": user_id,
-                "@extra": {"@type": "supergroup_2"},
+                "@extra": {"@type": "supergroup_2", "status": "missing"},
+            }
+        )
+
+    for user_id in present_ids:
+        client.send(
+            {
+                "@type": "getUser",
+                "user_id": user_id,
+                "@extra": {"@type": "supergroup_2", "status": "present"},
             }
         )
 
 
 def user_supergroup_2(client, event):
-    client.state["names"].append(event["first_name"])
+    extra = event["@extra"]
+    status = extra["status"]
+
+    first_name = event["first_name"].strip()
+
+    if status == "missing":
+        client.state["missing_names"].append(first_name)
+    elif status == "present":
+        client.state["present_names"].append(first_name)
+
     client.state["pending"] -= 1
 
     if client.state["pending"] != 0:
         return
 
-    # === ALL CONTACTS RESOLVED ===
-
-    sheet_rows = helpers.load_google_users()
-    sheet_lookup = helpers.build_sheet_lookup(sheet_rows)
-    if not sheet_lookup:
-        print("\nNo valid entries found in Google Sheet.")
-        client.menu_event.set()
-        return
-
     current_chat_id = str(client.state["current_supergroup"]["id"])
-    missing_students = []
 
-    for name in client.state["names"]:
-        # student is missing if he exists in the sheet for this chat
-        if (name, current_chat_id) in sheet_lookup:
-            missing_students.append(name)
-
-    # Mark non-missing registered students in sheet as present_in_channel=true
-    helpers.set_present_in_channel_for_chat(current_chat_id, missing_students)
-
-    lines = []
-    lines.append("\nMissing students:")
-
-    for name in missing_students:
-        lines.append(name)
-
-    lines.append(f"\nTotal missing students: {len(missing_students)}")
-
+    lines = helpers.update_presence_in_sheet(
+        current_chat_id=current_chat_id,
+        present_names=client.state["present_names"],
+        missing_names=client.state["missing_names"],
+    )
     pydoc.pager("\n".join(lines))
     client.menu_event.set()
 
@@ -360,25 +367,34 @@ def user_supergroup_3(client, event):
 
 def user_supergroup_4(client, event):
     if event["is_contact"]:
-        first_name = event["first_name"]
-        # collect contact members by first_name
-        client.state.setdefault("contacts", []).append(first_name)
+        first_name = event["first_name"].strip()
+        last_name = event["last_name"].strip()
+
+        full_name = f"{first_name} {last_name}".strip()
+
+        # store both for matching + output
+        client.state.setdefault("contacts", []).append(
+            {
+                "first_name": first_name,
+                "full_name": full_name,
+            }
+        )
 
     client.state["pending"] -= 1
 
     if client.state["pending"] != 0:
         return
 
-    contact_names = set(client.state["contacts"])
+    contacts = client.state["contacts"]
     sheet_rows = helpers.load_google_users()
     sheet_lookup = helpers.build_sheet_lookup(sheet_rows)
 
     chat_id = str(client.state["current_supergroup"]["id"])
     extra = []
 
-    for name in sorted(contact_names):
-        if (name, chat_id) not in sheet_lookup:
-            extra.append(name)
+    for user in sorted(contacts, key=lambda x: x["full_name"]):
+        if (user["first_name"], chat_id) not in sheet_lookup:
+            extra.append(user["full_name"])
 
     lines = []
     lines.append("\nExtra contacts in this group (Лишние контакты):")
